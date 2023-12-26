@@ -1,13 +1,10 @@
 import sqlite3
 
-# Connect to the SQLite database
-conn = sqlite3.connect('passwords.db')
-cursor = conn.cursor()
-
 # Drop the table if it exists
 # cursor.execute('DROP TABLE IF EXISTS passwords')
-def addPassword(website, password, username):
-    
+def addPassword(website, username, password):
+    conn = sqlite3.connect('passwords.db')
+    cursor = conn.cursor()
     # Create the table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS passwords (
@@ -18,14 +15,11 @@ def addPassword(website, password, username):
     ''')
 
     cursor.execute('INSERT INTO passwords (website, password, username) VALUES (?, ?, ?)', (website, password, username))
+    conn.commit()
+    conn.close()
 
 
 
 
-# Insert records into the table
-
-# Commit the changes and close the database connection
-conn.commit()
-conn.close()
 
 

@@ -4,21 +4,21 @@ from addPass import addPassword
 import tkinter as tk
 from tkinter import ttk
 import sqlite3
+import pyperclip
 
 def password():
     length = length_scale.get()
     password = generate_password(int(length))
     password_label.configure(text=f"{password} is copied to your clipboard")
-    addPassword(webEntry.get(), password)
+    addPassword(webEntry.get(), username_entry.get(), password)
+    pyperclip.copy(password)
 
 def slider_callback(value):
-    # value = length_scale.get()
     scale_label.configure(text=f"The password length is {int(value)}")
 
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
-# # Create the main window
 window = ctk.CTk()
 window.title("Random Password Generator")
 
@@ -27,7 +27,7 @@ window.grid_columnconfigure(0 ,weight=0)
 window.grid_columnconfigure(1 ,weight=1)
 
 # Set the height and width of the window
-window.geometry("1200x700")
+window.geometry("1200x800")
 
 Leftframe = ctk.CTkFrame(window,width=500,height=500)
 Leftframe.grid(row=0, column=0, padx=10, pady=10,sticky="nsew")
@@ -43,6 +43,11 @@ webLable.pack(padx=10, pady=10)
 
 webEntry = ctk.CTkEntry(frame,placeholder_text="Enter Website Name",corner_radius=10)
 webEntry.pack(padx=10, pady=10)
+username_label = ctk.CTkLabel(frame, text="Enter Username:")
+username_label.pack(padx=10, pady=10)
+
+username_entry = ctk.CTkEntry(frame, placeholder_text="Enter Username", corner_radius=10)
+username_entry.pack(padx=10, pady=10)
 
 # Create the widgets
 length_label = ctk.CTkLabel(frame, text="Password Length:")
@@ -65,34 +70,24 @@ password_label.pack(padx=10, pady=10)
 Rightframe = ctk.CTkFrame(window,fg_color="#212121")
 Rightframe.grid(row=0, column=1, padx=10, pady=10,sticky="nsew")
 
-
-import tkinter
-from tkinter import ttk
-import customtkinter
-
-
-customtkinter.set_appearance_mode("Dark")
-customtkinter.set_default_color_theme("blue")
-
 conn = sqlite3.connect("passwords.db")
 cursor = conn.cursor()
 
 # Fetch all the records from the database
 cursor.execute("SELECT * FROM passwords")
 records = cursor.fetchall()
-# print(records)
 
 
-frame_1 = customtkinter.CTkFrame(master=Rightframe)
+frame_1 = ctk.CTkFrame(master=Rightframe)
 frame_1.pack( fill="both", expand=True)
 
-label = customtkinter.CTkLabel(master=frame_1,text="Password Table")
+label = ctk.CTkLabel(master=frame_1,text="Password Table")
 label.pack(pady=10)
 
 ##Treeview Customisation (theme colors are selected)
-bg_color = window._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"])
-text_color = window._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkLabel"]["text_color"])
-selected_color = window._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkButton"]["fg_color"])
+bg_color = window._apply_appearance_mode(ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
+text_color = window._apply_appearance_mode(ctk.ThemeManager.theme["CTkLabel"]["text_color"])
+selected_color = window._apply_appearance_mode(ctk.ThemeManager.theme["CTkButton"]["fg_color"])
 
 treestyle = ttk.Style()
 treestyle.theme_use('default')
@@ -118,17 +113,26 @@ for record in records:
     username = record[3]
     treeview.insert(parent='', index="end", iid=id,  values=(id,website,username))
     treeview.insert(parent=id, index="end" , values=(password))
-    # treeview.move(f"{id}.1", id, "end")
 
 treeview.insert('', 0, values=("ID","Website","Username"))
 
+# Define a function to handle treeview selection
+def on_treeview_select(event):
+    selected_item = treeview.focus()
+    children = treeview.get_children(selected_item)
+    parent= treeview.parent(selected_item)
+    # print(parent if parent else "no parent")
+    if parent:
+        password = treeview.item(selected_item)["values"][0]
+        print("Password is",password)
+        password_label.configure(text=f"{password} is copied to your clipboard")
+        pyperclip.copy(password)
+
+# Bind the function to the TreeviewSelect event
+treeview.bind("<<TreeviewSelect>>", on_treeview_select)
 
 # Close the database connection
 conn.close()
 
-
-
-
 # Start the main loop
 window.mainloop()
-
