@@ -7,11 +7,24 @@ import sqlite3
 import pyperclip
 
 def password():
+    website = webEntry.get()
+    username = username_entry.get()
+    
+    if not website or not username:
+        password_label.configure(text="Please enter website and username",text_color="red")
+        return
+    
     length = length_scale.get()
     password = generate_password(int(length))
-    password_label.configure(text=f"{password} is copied to your clipboard")
-    addPassword(webEntry.get(), username_entry.get(), password)
+    addPassword(website, username, password)
+    
+    for widget in frame_1.winfo_children():
+        # if isinstance(widget, ttk.Treeview):
+        widget.destroy()
+    CreateTreeview()
     pyperclip.copy(password)
+    password_label.configure(text=f"{password} is copied to your clipboard",text_color="white")
+
 
 def slider_callback(value):
     scale_label.configure(text=f"The password length is {int(value)}")
@@ -64,7 +77,7 @@ scale_label.pack(padx=10, pady=10)
 generate_button = ctk.CTkButton(frame, text="Generate Password", command=password)
 generate_button.pack(padx=10, pady=10)
 
-password_label = ctk.CTkLabel(frame, text="")
+password_label = ctk.CTkLabel(frame, text="",text_color="white")
 password_label.pack(padx=10, pady=10)
 
 Rightframe = ctk.CTkFrame(window,fg_color="#212121")
@@ -99,37 +112,42 @@ window.bind("<<TreeviewSelect>>", lambda event: window.focus_set())
 
 
 ##Treeview widget data
-treeview = ttk.Treeview(frame_1, column=("ID","Website","Username","Password") ,show='tree')
-treeview.pack(padx=10,fill="both", expand=True)
-treeview.heading("#1", text="ID")
-treeview.heading("#2", text="Website")
-treeview.heading("#3", text="Username")
-treeview.heading("#4", text="Password")
-treeview.column("#0", width=4,minwidth=4)
-for record in records:
-    id = record[0]
-    website = record[1]
-    password = record[2]
-    username = record[3]
-    treeview.insert(parent='', index="end", iid=id,  values=(id,website,username))
-    treeview.insert(parent=id, index="end" , values=(password))
+def CreateTreeview():
+    label = ctk.CTkLabel(master=frame_1,text="Password Table")
+    label.pack(pady=10)
+    treeview = ttk.Treeview(frame_1, column=("ID","Website","Username","Password") ,show='tree')
+    treeview.pack(padx=10,fill="both", expand=True)
+    treeview.heading("#1", text="ID")
+    treeview.heading("#2", text="Website")
+    treeview.heading("#3", text="Username")
+    treeview.heading("#4", text="Password")
+    treeview.column("#0", width=4,minwidth=4)
+    for record in records:
+        id = record[0]
+        website = record[1]
+        password = record[2]
+        username = record[3]
+        treeview.insert(parent='', index="end", iid=id,  values=(id,website,username))
+        treeview.insert(parent=id, index="end" , values=(password))
 
-treeview.insert('', 0, values=("ID","Website","Username"))
+    treeview.insert('', 0, values=("ID","Website","Username"))
+
 
 # Define a function to handle treeview selection
-def on_treeview_select(event):
-    selected_item = treeview.focus()
-    children = treeview.get_children(selected_item)
-    parent= treeview.parent(selected_item)
-    # print(parent if parent else "no parent")
-    if parent:
-        password = treeview.item(selected_item)["values"][0]
-        print("Password is",password)
-        password_label.configure(text=f"{password} is copied to your clipboard")
-        pyperclip.copy(password)
+    def on_treeview_select(event):
+        selected_item = treeview.focus()
+        children = treeview.get_children(selected_item)
+        parent= treeview.parent(selected_item)
+        # print(parent if parent else "no parent")
+        if parent:
+            password = treeview.item(selected_item)["values"][0]
+            print("Password is",password)
+            password_label.configure(text=f"{password} is copied to your clipboard")
+            pyperclip.copy(password)
 
-# Bind the function to the TreeviewSelect event
-treeview.bind("<<TreeviewSelect>>", on_treeview_select)
+    treeview.bind("<<TreeviewSelect>>", on_treeview_select)
+CreateTreeview()
+
 
 # Close the database connection
 conn.close()
