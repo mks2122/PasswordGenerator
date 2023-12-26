@@ -52,7 +52,7 @@ frame= ctk.CTkFrame(Leftframe,fg_color="transparent")
 frame.grid(row=0, column=1, padx=10, pady=10,sticky="ew")
 
 webLable = ctk.CTkLabel(frame, text="Enter Website Name:")
-webLable.pack(padx=10, pady=10)
+webLable.pack(padx=20, pady=20)
 
 webEntry = ctk.CTkEntry(frame,placeholder_text="Enter Website Name",corner_radius=10)
 webEntry.pack(padx=10, pady=10)
@@ -83,14 +83,6 @@ password_label.pack(padx=10, pady=10)
 Rightframe = ctk.CTkFrame(window,fg_color="#212121")
 Rightframe.grid(row=0, column=1, padx=10, pady=10,sticky="nsew")
 
-conn = sqlite3.connect("passwords.db")
-cursor = conn.cursor()
-
-# Fetch all the records from the database
-cursor.execute("SELECT * FROM passwords")
-records = cursor.fetchall()
-
-
 frame_1 = ctk.CTkFrame(master=Rightframe)
 frame_1.pack( fill="both", expand=True)
 
@@ -115,6 +107,12 @@ window.bind("<<TreeviewSelect>>", lambda event: window.focus_set())
 def CreateTreeview():
     label = ctk.CTkLabel(master=frame_1,text="Password Table")
     label.pack(pady=10)
+    conn = sqlite3.connect("passwords.db")
+    cursor = conn.cursor()
+
+    # Fetch all the records from the database
+    cursor.execute("SELECT * FROM passwords")
+    records = cursor.fetchall()
     treeview = ttk.Treeview(frame_1, column=("ID","Website","Username","Password") ,show='tree')
     treeview.pack(padx=10,fill="both", expand=True)
     treeview.heading("#1", text="ID")
@@ -146,11 +144,11 @@ def CreateTreeview():
             pyperclip.copy(password)
 
     treeview.bind("<<TreeviewSelect>>", on_treeview_select)
+    conn.close()    
 CreateTreeview()
 
 
 # Close the database connection
-conn.close()
 
 # Start the main loop
 window.mainloop()
